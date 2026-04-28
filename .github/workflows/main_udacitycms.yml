@@ -19,19 +19,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m venv antenv
-          source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Zip artifact for deployment
-        run: |
-          zip -r release.zip . \
-            --exclude "antenv/*" \
-            --exclude "venv/*" \
-            --exclude ".git/*" \
-            --exclude "__pycache__/*" \
-            --exclude "*.pyc"
+        run: zip release.zip ./* -r --exclude "*.pyc" --exclude "*__pycache__*"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -41,11 +33,4 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-
-    steps:
-      - name: Download artifact from build job
-        us
+    needs: buil
