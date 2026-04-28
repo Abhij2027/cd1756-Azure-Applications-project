@@ -2,13 +2,13 @@ from datetime import datetime
 from FlaskWebProject import app, db, login
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from azure.storage.blob import BlockBlobService
+from azure.storage.blob import BlobServiceClient
 import string, random
 from werkzeug.utils import secure_filename
 from flask import flash
 
 blob_container = app.config['BLOB_CONTAINER']
-blob_service = BlockBlobService(account_name=app.config['BLOB_ACCOUNT'], account_key=app.config['BLOB_STORAGE_KEY'])
+blob_connection_string = app.config['BLOB_CONNECTION_STRING']
 
 def id_generator(size=32, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -50,19 +50,31 @@ class Post(db.Model):
         self.author = form.author.data
         self.body = form.body.data
         self.user_id = userId
-
-        if file:
-            filename = secure_filename(file.filename);
-            fileextension = filename.rsplit('.',1)[1];
-            Randomfilename = id_generator();
-            filename = Randomfilename + '.' + fileextension;
+        if file and file.filename:
+            filename = secure_filename(file.filename)
+            fileextension = filename.rsplit('.', 1)[1]
+            randomfilename = id_generator()
+            filename = randomfilename + '.' + fileextension
             try:
-                blob_service.create_blob_from_stream(blob_container, filename, file)
-                if(self.image_path):
-                    blob_service.delete_blob(blob_container, self.image_path)
-            except Exception:
-                flash(Exception)
-            self.image_path =  filename
+                blob_service_client = BlobServiceClient.from_connection_string(blob_connection_string)
+                blob_client = blob_service_client.get_blob_client(
+                    container=blob_container,
+                    blob=filename
+                )
+                file.seek(0)
+                blob_client.upload_blob(file, overwrite=True)
+                if self.image_path:
+                    old_blob = blob_service_client.get_blob_client(
+                        container=blob_container,
+                        blob=self.image_path
+                    )
+                    try:
+                        old_blob.delete_blob()
+                    except:
+                        pass
+            except Exception as e:
+                flash(str(e))
+            self.image_path = filename
         if new:
             db.session.add(self)
         db.session.commit()
