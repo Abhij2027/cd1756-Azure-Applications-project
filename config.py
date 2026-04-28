@@ -15,7 +15,7 @@ class Config(object):
     SQL_USER_NAME = os.environ.get('SQL_USER_NAME') or 'cmsadmin'
     SQL_PASSWORD = os.environ.get('SQL_PASSWORD') or 'CMS4dmin'
 
-    SQLALCHEMY_DATABASE_URI = 'mssql+pyodbc://' + (os.environ.get('SQL_USER_NAME') or 'cmsadmin') + ':' + (os.environ.get('SQL_PASSWORD') or 'CMS4dmin') + '@' + (os.environ.get('SQL_SERVER') or 'cms1.database.windows.net') + ':1433/' + (os.environ.get('SQL_DATABASE') or 'cms') + '?driver=ODBC+Driver+17+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no'
+   SQLALCHEMY_DATABASE_URI = 'mssql+pyodbc://{0}:{1}@{2}:1433/{3}?driver=ODBC+Driver+17+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes&Connection+Timeout=30'.format(os.environ.get('SQL_USER_NAME','cmsadmin'), os.environ.get('SQL_PASSWORD','CMS4dmin'), os.environ.get('SQL_SERVER','cms1.database.windows.net'), os.environ.get('SQL_DATABASE','cms'))
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
